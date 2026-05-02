@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './TaskPrioritizer.module.css';
 import { prioritizeTasksAct } from '../app/actions';
 
@@ -10,6 +10,12 @@ type PriorityItem = {
   reason: string;
 }
 
+const PRIORITY_LABEL_JA: Record<string, string> = {
+  High: '高',
+  Medium: '中',
+  Low: '低',
+};
+
 export default function TaskPrioritizer() {
   const [profile, setProfile] = useState('');
   const [situation, setSituation] = useState('');
@@ -18,21 +24,7 @@ export default function TaskPrioritizer() {
   const [results, setResults] = useState<PriorityItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedProfile = localStorage.getItem('ai_task_profile');
-      const savedSituation = localStorage.getItem('ai_task_situation');
-      if (savedProfile) setProfile(savedProfile);
-      if (savedSituation) setSituation(savedSituation);
-    }
-  }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ai_task_profile', profile);
-      localStorage.setItem('ai_task_situation', situation);
-    }
-  }, [profile, situation]);
 
   const handleTaskChange = (index: number, value: string) => {
     const newTasks = [...tasks];
@@ -51,7 +43,7 @@ export default function TaskPrioritizer() {
     e.preventDefault();
     const validTasks = tasks.filter(t => t.trim() !== '');
     if (validTasks.length === 0) {
-      setError('Please enter at least one task.');
+      setError('少なくとも1つタスクを入力してください。');
       return;
     }
 
@@ -63,7 +55,7 @@ export default function TaskPrioritizer() {
       const data = await prioritizeTasksAct(profile, situation, validTasks);
       setResults(data.results || []);
     } catch (err: any) {
-      setError(err.message || 'An error occurred.');
+      setError(err.message || 'エラーが発生しました。');
     } finally {
       setLoading(false);
     }
@@ -74,22 +66,22 @@ export default function TaskPrioritizer() {
       <form onSubmit={handleSubmit} className={styles.formSection}>
         <div className="glass-panel">
           <div className={styles.panelContent}>
-            <h2 className={styles.sectionTitle}>1. About You</h2>
+            <h2 className={styles.sectionTitle}>1. あなたについて</h2>
             <div className={styles.inputGroup}>
-              <label>Profile (Role, Job, etc.)</label>
+              <label>プロフィール（役職・職種など）</label>
               <input
                 type="text"
-                placeholder="e.g. Freelance Web Designer"
+                placeholder="例：フリーランスのWebデザイナー"
                 value={profile}
                 onChange={(e) => setProfile(e.target.value)}
                 className={styles.input}
               />
             </div>
             <div className={styles.inputGroup}>
-              <label>Current Situation</label>
+              <label>現在の状況</label>
               <input
                 type="text"
-                placeholder="e.g. Only have 2 hours, feeling tired"
+                placeholder="例：残り2時間しかない、少し疲れている"
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
                 className={styles.input}
@@ -100,13 +92,13 @@ export default function TaskPrioritizer() {
 
         <div className="glass-panel">
           <div className={styles.panelContent}>
-            <h2 className={styles.sectionTitle}>2. Your Tasks</h2>
+            <h2 className={styles.sectionTitle}>2. タスク一覧</h2>
             <div className={styles.taskList}>
               {tasks.map((task, index) => (
                 <div key={index} className={styles.taskInputWrapper}>
                   <input
                     type="text"
-                    placeholder={`Task ${index + 1}`}
+                    placeholder={`タスク ${index + 1}`}
                     value={task}
                     onChange={(e) => handleTaskChange(index, e.target.value)}
                     className={styles.input}
@@ -125,7 +117,7 @@ export default function TaskPrioritizer() {
               ))}
             </div>
             <button type="button" onClick={addTaskField} className={styles.addBtn}>
-              + Add another task
+              ＋ タスクを追加
             </button>
           </div>
         </div>
@@ -136,14 +128,14 @@ export default function TaskPrioritizer() {
           {loading ? (
             <span className={styles.loadingSpinner}></span>
           ) : (
-            'Prioritize My Tasks'
+            'AIで優先順位をつける'
           )}
         </button>
       </form>
 
       {results && (
         <div className={styles.resultsSection}>
-          <h2 className={styles.resultsTitle}>AI Recommended Priority</h2>
+          <h2 className={styles.resultsTitle}>AIが判定した優先順位</h2>
           <div className={styles.cardsContainer}>
             {results.map((item, idx) => (
               <div
@@ -152,7 +144,7 @@ export default function TaskPrioritizer() {
                 style={{ animationDelay: `${idx * 0.15}s` }}
               >
                 <div className={styles.cardHeader}>
-                  <span className={styles.priorityBadge}>{item.priority}</span>
+                  <span className={styles.priorityBadge}>{PRIORITY_LABEL_JA[item.priority] ?? item.priority}</span>
                   <h3>{item.task}</h3>
                 </div>
                 <p className={styles.reason}>{item.reason}</p>

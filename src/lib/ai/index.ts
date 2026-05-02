@@ -20,15 +20,17 @@ export async function prioritizeUserTasks(profile: string, situation: string, ta
   const ai = getAIClient();
 
   const prompt = `
-You are an expert AI productivity assistant. 
-User Profile: ${profile || 'Not specified'}
-Current Situation: ${situation || 'Not specified'}
+あなたは優秀なAI生産性アシスタントです。必ず日本語で回答してください。
 
-Here is the list of tasks the user needs to do:
+ユーザーのプロフィール: ${profile || '未記入'}
+現在の状況: ${situation || '未記入'}
+
+以下のタスク一覧を優先順位の高い順に並べ替えてください：
 ${tasks.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 
-Based on the user's profile and current situation, order these tasks by priority (highest to lowest).
-Think about why a task is urgent or important given their context.
+ユーザーのプロフィールと現在の状況を踏まえ、各タスクがなぜ急ぎ・重要なのかを簡潔に説明してください。
+"reason"フィールドは必ず日本語で記述してください。
+"priority"フィールドは必ず "High"、"Medium"、"Low" のいずれかの英語を使用してください。
 `;
 
   // Define structured response schema
